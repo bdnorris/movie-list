@@ -1,5 +1,18 @@
-// Minimal TMDB client for searching and fetching details
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+// Minimal TMDB client that calls through Netlify function to hide API key
+// For local dev, set VITE_USE_NETLIFY_FUNCTION=true to test the function locally
+
+function getApiEndpoint() {
+	// Check if we should use Netlify function (production or explicit flag)
+	const useNetlifyFn = import.meta.env.VITE_USE_NETLIFY_FUNCTION === 'true' || import.meta.env.PROD;
+	
+	if (useNetlifyFn) {
+		// Use Netlify function in production or when explicitly enabled
+		return '/.netlify/functions/tmdb';
+	} else {
+		// Fall back to direct TMDB API for local dev (requires VITE_TMDB_API_KEY)
+		return null;
+	}
+}
 
 function getApiKey() {
 	const key = import.meta.env.VITE_TMDB_API_KEY;
@@ -10,16 +23,34 @@ function getApiKey() {
 }
 
 async function tmdbFetch(path, params = {}) {
-	const url = new URL(`${TMDB_BASE_URL}${path}`);
-	const searchParams = new URLSearchParams({ api_key: getApiKey(), include_adult: 'false', language: 'en-US', ...params });
-	url.search = searchParams.toString();
+	const netlifyEndpoint = getApiEndpoint();
+	
+	if (netlifyEndpoint) {
+		// Use Netlify function proxy
+		const url = new URL(netlifyEndpoint, window.location.origin);
+		const searchParams = new URLSearchParams({ endpoint: path, ...params });
+		url.search = searchParams.toString();
+		
+		const response = await fetch(url.toString());
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+			throw new Error(`TMDB request failed ${response.status}: ${errorData.error}`);
+		}
+		return response.json();
+	} else {
+		// Direct TMDB API call (local dev only)
+		const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+		const url = new URL(`${TMDB_BASE_URL}${path}`);
+		const searchParams = new URLSearchParams({ api_key: getApiKey(), include_adult: 'false', language: 'en-US', ...params });
+		url.search = searchParams.toString();
 
-	const response = await fetch(url.toString());
-	if (!response.ok) {
-		const text = await response.text().catch(() => '');
-		throw new Error(`TMDB request failed ${response.status}: ${text}`);
+		const response = await fetch(url.toString());
+		if (!response.ok) {
+			const text = await response.text().catch(() => '');
+			throw new Error(`TMDB request failed ${response.status}: ${text}`);
+		}
+		return response.json();
 	}
-	return response.json();
 }
 
 export async function searchMovies(query) {
