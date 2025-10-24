@@ -15,20 +15,33 @@ A minimal Vue + Vite app to search The Movie Database (TMDB) and build a quick l
 
 ## Local Development Setup
 
-1. Create an `.env` file based on `.env.example` and add your TMDB API key:
+The app uses Netlify Functions for all API calls, so you'll need to run it with Netlify CLI to test locally.
+
+1. Create an `.env` file with your TMDB API key:
 
 ```
-VITE_TMDB_API_KEY=YOUR_KEY_HERE
+TMDB_API_KEY=YOUR_KEY_HERE
 ```
 
-2. Install dependencies and run the dev server:
+2. Install dependencies:
 
 ```
 npm install
-npm run dev
 ```
 
-In local dev mode, the app calls TMDB API directly using your key from `.env`.
+3. Install Netlify CLI globally (if you haven't already):
+
+```
+npm install -g netlify-cli
+```
+
+4. Run the dev server with Netlify CLI:
+
+```
+netlify dev
+```
+
+This will start both the Vite dev server and the Netlify function locally.
 
 ## Deploying to Netlify
 
@@ -59,20 +72,9 @@ The app uses a Netlify serverless function to proxy TMDB API requests, keeping y
 
 ### How It Works
 
-- **Local dev**: Uses `VITE_TMDB_API_KEY` from `.env` to call TMDB directly
-- **Production**: Calls `/.netlify/functions/tmdb` which uses `TMDB_API_KEY` from Netlify env vars
-- The serverless function proxies requests to TMDB, keeping your API key hidden from the client
-
-### Testing Netlify Function Locally
-
-Install Netlify CLI and run:
-
-```bash
-npm install -g netlify-cli
-netlify dev
-```
-
-Set `TMDB_API_KEY` in your `.env` file and the Netlify CLI will run the function locally.
+- All API calls (local and production) go through `/.netlify/functions/tmdb`
+- The serverless function uses `TMDB_API_KEY` from environment variables
+- Your API key never appears in client-side code or build output
 
 ## Notes
 
