@@ -34,3 +34,15 @@ a {
 	text-decoration: inherit;
 }
 a:hover { color: oklch(0.78 0.16 28); }
+
+html {
+  box-sizing: border-box;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
