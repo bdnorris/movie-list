@@ -309,6 +309,10 @@ async function copyListHtml() {
 	margin: 32px 0 14px;
 }
 
+.watchlist, .results {
+	margin-block: 2rem;
+}
+
 /* ---------- Search ---------- */
 .search {
 	display: flex;
